@@ -1,0 +1,130 @@
+/****************** (C) COPYRIGHT 2019     版权所有 ******************
+* File Name          : HWService.h
+* Author             : TonyZane
+* Version            : V1.0.2
+* Date               : 01/01/2019
+* Description        : 
+********************************************************************************
+* All copyright reserved
+*******************************************************************************/
+
+/* Includes --------------------------------------------------------------------*/
+#ifndef _HWSERVICE_H
+#define _HWSERVICE_H
+
+
+
+
+/* Private define ---------------------------------------------------------------*/
+#ifndef DLL_API
+#define DLL_API
+#endif
+
+/* Public define ---------------------------------------------------------------*/
+
+
+typedef enum {
+	// 通过传入的句柄发送消息的方式读设备，动态链接库将发送接收到的数据给传入句柄，直接将收到的原始数据发送消息给应用程序
+	CONTROL_TYPE_HANDLE_DIRECT=0,
+	// 不启用读取线程，直接进行I/O操作
+	CONTROL_TYPE_DIRECT_READWRITE,
+	// ==========================================暂未实现本方式操作，预留更新==========================================
+	// 通过传入的句柄发送消息的方式读设备，动态链接库将发送接收到的数据给传入句柄，在收到触摸数据时，以仿触摸方式构建数据包，并发出消息
+	// 使用本方式时，动态链接库收到触摸数据时，将收到的数据包组合成类似Windows的WM_TOUCH的消息格式发送给应用程序
+	// 发送给应用程序的消息中，Wparam为一帧数据包所包含的点数，对应nInputsCount参数
+	// Lparam为PTOUCHINPUT指针,对应OnTouchInput中的pInput参数
+	// OnTouchInput(CPoint pt, int nInputNumber, int nInputsCount, PTOUCHINPUT pInput)
+	CONTROL_TYPE_HANDLE_SIM_TOUCH,
+}CONTROL_TYPE;
+
+typedef struct __DEV_INFO
+{
+	USHORT	vid;
+	USHORT	pid;
+	ULONG	devVer;
+	ULONG	serial;
+	char	devName[32];
+	// 自定义个性化存储4字节
+	char	devStore[4];
+}DEV_INFO, *PDEV_INFO;
+
+
+
+/* Error codes ------------------------------------------------------------------*/
+
+#define IRT_SUCCESS					0x0		
+#define IRT_ERROR_NODEVICE			-1		// 设备断开
+#define IRT_ERROR_COMMUNICATION		-2		// 通信错误
+#define IRT_ERROR_OVER_TIME			-3		// 应答超时
+#define IRT_ERROR_PARAM				-4		// 错误的应用参数
+
+
+
+/* Function prototypes ---------------------------------------------------------*/
+
+
+extern "C"
+{
+
+	/*******************************************************************************
+	* Function Name  : 查询设备数量
+	* Description    :
+	* Input          : pCount,返回当前的设备数量
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_Get_DeviceCount(int* pCount);
+	// 动态链接库调用原型
+	typedef __int32(__cdecl *ADP_Irt_Get_DeviceCount)(int* pCount);
+
+	/*******************************************************************************
+	* Function Name  :打开一个设备
+	* Description    :
+	* Input          : nDevnum:设备编号,contype:读取设备类型,HWND:接收数据的窗口句柄,nIdMessage:接收数据的自定义消息ID
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_OpenDevice(int nDevnum, CONTROL_TYPE contype, HWND hwndRev, UINT nIdMessage);
+	typedef __int32(__cdecl *ADP_Irt_OpenDevice)(int nDevnum, CONTROL_TYPE contype, HWND hwndRev, UINT nIdMessage);
+	/*******************************************************************************
+	* Function Name  : 关闭一个设备
+	* Description    :
+	* Input          : nDevnum:设备编号
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_CloseDevice(int nDevnum);
+	typedef __int32(__cdecl *ADP_Irt_CloseDevice)(int nDevnum);
+	/*******************************************************************************
+	* Function Name  : 获取一个设备的参数信息
+	* Description    :
+	* Input          : nDevnum:设备编号,pInfo:返回的设备信息
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_Get_DeviceInfo(int nDevnum, PDEV_INFO pInfo);
+	typedef __int32(__cdecl *ADP_Irt_Get_DeviceInfo)(int nDevnum, PDEV_INFO pInfo);
+	/*******************************************************************************
+	* Function Name  : 从设备读取一帧数据，64字节
+	* Description    : 本函数只在设备打开类型为CONTROL_TYPE_DIRECT_READWRITE可以调用，读取数据有效时间50mS，超时返回失败
+	* Input          : nDevnum:设备编号,pData:接收数据的指针,len:返回数据长度
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_Dev_Read(int nDevnum, PUCHAR pData, int* pLen);
+	typedef __int32(__cdecl *ADP_Irt_Dev_Read)(int nDevnum, PUCHAR pData, int* pLen);
+	/*******************************************************************************
+	* Function Name  :
+	* Description    :
+	* Input          : nDevnum:设备编号,pData:发送数据的指针,len:数据长度
+	* Output         : None
+	* Return         : None
+	*******************************************************************************/
+	DLL_API __int32 Irt_Dev_Write(int nDevnum, PUCHAR data, int len);
+	typedef __int32(__cdecl *ADP_Irt_Dev_Write)(int nDevnum, PUCHAR pData, int len);
+}
+
+#endif
+
+/************************* (C) COPYRIGHT 2019 *************************/
+
