@@ -1,0 +1,2 @@
+maimaiTouchBasedOnYijing
+利用红外触摸框能判定触点宽高的特性编写的maimai模拟分区触摸
